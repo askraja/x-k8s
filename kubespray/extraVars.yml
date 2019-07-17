@@ -1,0 +1,18 @@
+## Helm deployment
+helm_enabled: true
+
+## Multus deployment
+kube_network_plugin: flannel
+kube_network_plugin_multus: true
+
+## SRIOV Support
+sriov_enabled : false
+
+## Enable basic auth
+# kube_basic_auth: true
+## User defined api password
+# kube_api_pwd: xk8suser
+
+## Change default NodePort range 
+# kube_apiserver_node_port_range: "9000-32767"
+

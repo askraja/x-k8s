@@ -1,0 +1,32 @@
+#
+# Enable SRIOV CNI using Intel SRIOV Device plugin, and SRIOV CNI
+# 
+
+---
+- name: Copy CRD
+  template:
+    dest: "{{ kube_config_dir }}/crdnetwork.yml"
+    src: "crdnetwork.yml"
+
+- name: delete old CRD 
+  command: "kubectl delete crd network-attachment-definitions.k8s.cni.cncf.io"
+  environment: 
+    KUBECONFIG: "{{ kubeconfig }}"
+
+- name: Apply CRD
+  command: "{{ kube_create }} {{ kube_config_dir }}/crdnetwork.yml"
+  environment:
+    KUBECONFIG: "{{ kubeconfig }}"
+  ignore_errors: true
+
+- name: Copy Sriov device plugin daemon set
+  template:
+    dest: "{{kube_config_dir}}/sriovdp-daemonset.yml"
+    src: "sriovdp-daemonset.yml"
+
+- name: Apply Sriov device plugin daemon set
+  command: "{{ kube_create }} {{ kube_config_dir }}/sriovdp-daemonset.yml"
+  environment:
+    KUBECONFIG: "{{ kubeconfig }}"
+  ignore_errors: true
+

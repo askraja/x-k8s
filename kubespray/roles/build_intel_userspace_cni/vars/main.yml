@@ -1,0 +1,9 @@
+
+---
+
+k8s_cni_bin: "/opt/cni/bin"
+k8s_cni_conf: "/etc/cni/net.d"
+cni_dir: "/opt/vhost_cni"                                                                
+cni_branch: "v1.1"                                                                     
+cni_repo: "https://github.com/intel/vhost-user-net-plugin"
+
