@@ -1,0 +1,31 @@
+#
+# Build Sriov CNI plugin
+#
+---
+- name: Create sriov cni dir
+  file:
+    path: "{{ sriov_cni_dir }}"
+    state: "directory"
+
+- name: Clone sriov cni
+  async: 600
+  poll: 10
+  git:
+    repo: "{{ sriov_cni_repo }}"
+    dest: "{{ sriov_cni_dir }}"
+    version: "{{ sriov_cni_branch }}"
+    accept_hostkey: yes
+    recursive: no
+    force: yes
+
+- name: Build sriov cni
+  command: "make"
+  args:
+    chdir: "{{sriov_cni_dir}}"
+
+- name: Copy Sriov cni to cni dir.
+  copy:
+    src: "{{sriov_cni_dir}}/build/sriov"
+    dest: "/opt/cni/bin/"
+    remote_src: yes
+    mode: 0755

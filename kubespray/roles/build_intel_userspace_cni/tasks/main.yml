@@ -1,0 +1,39 @@
+
+---
+  - name: Create vhostuser dirs
+    file: "path=/opt/vhost_cni state=directory"
+
+  - name: Clone vhostuer repos
+    async: 600
+    poll: 10
+    git:
+      repo: "{{ cni_repo }}"
+      dest: "{{ cni_dir }}"
+      version: "{{ cni_branch }}"
+      accept_hostkey: yes
+      recursive: no
+      force: yes
+
+  - name: Build multus, sriov, vhostuser
+    command: "./build"
+    args:
+      chdir: "{{ cni_dir }}"
+
+# Bug in ansible 2.2 with_fileglob
+# Remote src does not support recursive copy
+  - name: Copy multus, sriov, vhostuser binaries
+    copy:
+      src: "/opt/{{ item.0 }}_cni/bin/{{ item.1 }}"
+      dest: "{{ k8s_cni_bin }}"
+      remote_src: yes
+      mode: 0755
+    with_together:
+      - [ 'vhost' ]
+      - [ 'vhostuser' ]
+
+  - name: create directory /etc/cni/net.d
+    file:
+      dest: "{{ k8s_cni_conf }}"
+      state: directory
+      mode: 0755
+

@@ -1,0 +1,46 @@
+---
+  - name: Check go version
+    shell: " go version | rev | cut -d ' ' -f2 | rev | sed 's/go//' "
+    register: go_version
+
+  - name: Remove old golang
+    apt:
+      name: golang-go
+      state: absent
+    when: go_version.stdout.version is defined and go_version.stdout is version('1.10', '<')
+
+  - name: Delete old go file
+    file:
+      state: absent
+      path: "/usr/local/go"
+
+  - name: Add repository for new go-lang 
+    apt_repository:
+      repo: 'ppa:longsleep/golang-backports'
+
+  - name: Install new go-lang
+    apt:
+      name: golang-go=2:1.12~1longsleep1+xenial
+
+  - name: Install glide
+    apt:
+      name: golang-glide
+
+  - name: print result
+    debug: 
+      var: result.stdout_lines
+
+  - name: Get version again
+    shell: " go version | rev | cut -d ' ' -f2 | rev | sed 's/go//' "
+    register: go_version
+    failed_when: go_version.stdout is version('1.10', '<')
+
+  - name: print version
+    debug: 
+      var: go_version.stdout_lines
+
+  - name: Copy go dir.
+    command: cp -r /usr/lib/{{ item }} /usr/local
+    with_items: 
+      - "go"
+      - "go-1.12"

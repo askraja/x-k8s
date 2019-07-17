@@ -1,0 +1,96 @@
+#!/usr/bin/env python3
+
+""" X-K8S Installer
+
+Usage: 
+    ./x-k8s install [--i=<hosts>]
+    ./x-k8s reset [--i=<hosts>]
+    ./x-k8s list inventory [--vars]
+    ./x-k8s ( -h | --help)
+    ./x-k8s ( -v | --version)
+
+Examples:
+    ./x-k8s install                     Install x-k8s.
+    ./x-k8s install --i kubespray/inventory/custom/hosts.ini
+                                        Install x-k8s using custom inventory.
+    ./x-k8s reset                       Reset host environment listed in inventory.
+    ./x-k8s reset --i kubespray/inventory/custom/hosts.ini
+                                        Reset host environment using custom inventory.
+    ./x-k8s list inventory              List hosts inventory.
+    ./x-k8s list inventory --vars       List hosts inventory with all variables.
+    ./x-k8s -h                          
+    ./x-k8s --help
+    ./x-k8s -v
+    ./x-k8s --version
+
+Options:
+    -h, --help                          Show this message.
+    -v, --version                       Show version.
+    --vars                              List hosts inventor with all variables.
+    --i=<hosts>                         Path to custom inventory hosts.ini
+
+"""
+
+from docopt import docopt
+from pathlib import Path
+import configparser
+
+basePath = str(Path().absolute())
+inventoryPath = basePath+'/kubespray/inventory/mycluster/hosts.ini'
+playbookPath = basePath+'/kubespray/cluster.yml'
+extraVarPath = basePath+'/kubespray/extraVars.yml'
+resetPath = basePath+'/kubespray/reset.yml'
+
+def install():
+    global inventoryPath
+    if '--i' in cliArg and cliArg['--i']:
+        inventoryPath = './'+cliArg['--i']
+    mycli = getattr(__import__("ansible.cli.playbook", fromlist=['PlaybookCLI']), 'PlaybookCLI')
+    ansirbleArgs = ['ansible-playbook', '-i', inventoryPath, 
+            playbookPath, 
+            "-e", "@"+extraVarPath, 
+            "--become-user=root"]
+    cli = mycli(ansirbleArgs)
+    cli.parse()
+    exitCode = cli.run()
+    return exitCode
+
+def reset():
+    global inventoryPath
+    if '--i' in cliArg and cliArg['--i']:
+        inventoryPath = './'+cliArg['--i']
+    mycli = getattr(__import__("ansible.cli.playbook", fromlist=['PlaybookCLI']), 'PlaybookCLI')
+    ansirbleArgs = ['ansible-playbook', '-i', inventoryPath, resetPath, "--become-user=root"]
+    cli = mycli(ansirbleArgs)
+    cli.parse()
+    exitCode = cli.run()
+    return exitCode
+
+def listInventory():
+    global cliArg
+    mycli = getattr(__import__("ansible.cli.inventory", fromlist=['InventoryCLI']), 'InventoryCLI')
+    ansirbleArgs = ['ansible-inventory', '-i', inventoryPath, "--graph"]
+    if '--vars' in cliArg and cliArg['--vars']:
+        ansirbleArgs.append("--vars")
+    cli = mycli(ansirbleArgs)
+    cli.parse()
+    exitCode = cli.run()
+    return exitCode
+
+
+def main():
+    global cliArg
+    if 'install' in cliArg and cliArg['install']:
+        install()
+    elif 'reset' in cliArg and cliArg['reset']:
+        reset()
+    elif 'list' in cliArg and cliArg['list']:
+        if 'inventory' in cliArg and cliArg['inventory']:
+            listInventory()
+    else:
+        return
+
+
+if __name__ == "__main__":
+    cliArg = docopt(__doc__, version='v1.1.1')
+    main()

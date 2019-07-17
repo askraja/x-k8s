@@ -1,0 +1,5 @@
+---
+sriov_cni_dir: "/opt/sriov-cni"
+sriov_cni_repo: "https://github.com/intel/sriov-cni.git"
+sriov_cni_branch: "v1.0.0"
+k8s_cni_bin: "/opt/cni/bin"
